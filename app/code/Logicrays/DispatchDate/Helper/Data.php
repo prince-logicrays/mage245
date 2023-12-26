@@ -38,7 +38,7 @@ class Data extends AbstractHelper
     }
 
     /**
-     * Undocumented function
+     * Get product dispatch date
      *
      * @return void
      */
