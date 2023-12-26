@@ -1,0 +1,92 @@
+<?php
+$_product = $block->getProduct();
+
+$attributes = $_product->getExtensionAttributes();
+$stockItems = $attributes->getStockItem();
+$customBlock = $this->getLayout()->createBlock(\Logicrays\IncreaseQty\Block\GeneralData::class);
+$isStockManage = $customBlock->isStockManage();
+
+$stockQty = $_product->getQuantityAndStockStatus();
+
+?>
+
+<?php $buttonTitle = __('Add to Cart'); ?>
+<?php if ($_product->isSaleable()): ?>
+<div class="box-tocart">
+   <div class="fieldset">
+       <?php if ($block->shouldRenderQuantity()): ?>
+       <div class="field qty">
+            <script type="text/x-magento-init">
+            {
+            "*": {
+                    "Magento_Ui/js/core/app": {
+                        "components": {
+                            "qty_change": {
+                                "component": "Logicrays_IncreaseQty/js/view/product/view/qtychange",
+                                "defaultQty": <?= $block->getProductDefaultQty() * 1 ?>
+                            }
+                        }
+                    }
+            }
+            }
+            </script>
+            <?php
+            $qty = $stockQty['qty'];
+            if ($stockItems->getUseConfigManageStock() && !$isStockManage) {
+                $qty = $stockQty['qty'].'_'.$stockItems->getManageStock();
+            } elseif (!$stockItems->getUseConfigManageStock() && !$stockItems->getManageStock()) {
+                $qty = $stockQty['qty'].'_'.$stockItems->getManageStock();
+            }
+            ?>
+            <input type="text" class="total-qtys" value="<?= /** noEscap */ $qty?>" hidden/>
+            <input type="text" class="reset-qty" name="resetqty" value="" hidden/>
+            <div class="control" data-bind="scope: 'qty_change'">
+                <button class="decreaseQty" title="Decrease Qty" id="decreaseQty"
+                data-bind="click: decreaseQty">-</button>
+                <input  data-bind="value: qty()"
+                    type="number"
+                    name="qty"
+                    id="qty"
+                    maxlength="5"
+                    title="<?= /** noEscap */ __('Qty') ?>"
+                    class="input-text qty entered-qty"
+                    data-validate="<?= /** noEscap */ $block->escapeHtml(json_encode($block->getQuantityValidators())) ?>"
+                    />
+
+                <button class="increaseQty" title="Increase Qty" id="increaseQty"
+                data-bind="click: increaseQty">+</button>
+            </div>
+        </div>
+        <?php endif; ?>
+        <div class="actions">
+            <button type="submit"
+                    title="<?= /** noEscap */ $buttonTitle ?>"
+                    class="action primary tocart"
+                    id="product-addtocart-button">
+                <span><?= /** noEscap */ $buttonTitle ?></span>
+            </button>
+            <?= /** noEscap */ $block->getChildHtml('', true) ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+<script type="text/x-magento-init">
+   {
+       "#product_addtocart_form": {
+           "Magento_Catalog/product/view/validation": {
+               "radioCheckboxClosest": ".nested"
+           }
+       }
+   }
+</script>
+<?php if (!$block->isRedirectToCartEnabled()): ?>
+<script type="text/x-magento-init">
+   {
+       "#product_addtocart_form": {
+           "catalogAddToCart": {
+               "bindSubmit": false
+           }
+       }
+   }
+</script>
+<?php endif; ?>

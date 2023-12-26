@@ -1,0 +1,8 @@
+{
+    "name": "campweb/redesign",
+    "type": "magento2-theme",
+    "version": "1.0.0",
+    "autoload": {
+        "files": [ "registration.php" ]
+    }
+}

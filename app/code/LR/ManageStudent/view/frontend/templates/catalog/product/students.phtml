@@ -1,0 +1,99 @@
+<?php
+$_product = $block->getProduct();
+$productId = $_product->getId();
+
+$viewModel = $block->getData('view_model');
+$helper = $viewModel->getHelperData();
+$moduleEnable = $helper->isEnabled();
+$isCustomerLoggedIn = $viewModel->isCustomerLoggedIn();
+$studentData = $viewModel->getManageStudentCollection();
+
+ $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+ $cart = $objectManager->get('\Magento\Checkout\Model\Cart');
+ //This return something
+ $items = $cart->getQuote()->getAllItems();
+   foreach ($items as $item) {
+
+    $pId = $item->getProductId();
+    if ($pId == $productId) {
+          $customOptions = $item->getOptionByCode('additional_options');
+//echo $customOptions['value'];
+
+//$json_array = json_decode(json_encode($customOptions['value']), true);
+
+
+$json_array = json_decode($customOptions['value']);
+  // code...
+
+$abc = [];
+foreach ($json_array as $obj)
+{
+    // Here you can access to every object value in the way that you want
+    $abc[] = $obj->value;
+}
+
+//$newLangsComma = implode(",", $abc);
+// echo "<pre>";
+// print_r($newLangsComma);
+//print_r($abc);
+    }
+
+}
+//exit();
+?>
+<?php if ($moduleEnable == 1 /* && $isCustomerLoggedIn */): ?>
+  <?php if (count($studentData)): ?>
+    <div id="accordion" data-mage-init='{
+            "accordion":{
+                "collapsible": true,
+                "openedState": "active"
+            }}'>
+        <div data-role="collapsible">
+            <div data-role="trigger">
+                <h4>Please select a student</h4>
+            </div>
+        </div>
+        <div data-role="content">
+                <?php foreach ($studentData as $student): ?>
+
+                  <?php $ddd = $student->getFirstName() . " " . $student->getLastName(); 
+
+
+                  ?>
+                  <div class="custom-select-option">
+                    <input class="custom-select-option-checkbox" type="checkbox"
+                      name="students[]" id="<?php  echo $student->getFirstName(); ?>" value="<?php  echo $student->getId(); ?>
+                      "<?php
+                      if (isset($abc)) :
+                        if (in_array($ddd,$abc)) : echo "checked='checked'"; endif;
+                      endif;
+                      ?>><?php  echo $student->getFirstName() . " " . $student->getLastName(); ?>
+                  </div>
+                <?php endforeach; ?>
+        </div>
+    </div>
+  <?php endif; ?>
+<?php endif; ?>
+
+<script>
+  require(['jquery'],
+    function($){
+       $(document).ready(function(){
+  $('input[type=checkbox]').on('change', function() {
+    var checked = [];
+    var unchecked = [];
+      $("input[type='checkbox']:checked").each(function() {
+            checked[checked.length] = this.value;            
+        });
+        $("input[type='checkbox']:not(:checked)").each(function() {
+            unchecked[unchecked.length] = this.value;            
+        });
+        console.log(checked);
+  });
+});
+    });
+
+
+
+
+</script>

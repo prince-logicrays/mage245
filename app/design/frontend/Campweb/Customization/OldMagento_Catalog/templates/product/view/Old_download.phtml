@@ -1,0 +1,20 @@
+<?php
+$product = $block->getProduct();
+$lrProductHelper = $this->helper('LR\ProductPage\Helper\Data');
+$downloads = [];
+if($downloadValue = $product->getData('documents'))
+{
+	$downloads = $lrProductHelper->getDownloads($downloadValue);
+}
+?>
+
+<?php if (count($downloads) > 0): ?>
+  <ul>
+    <?php foreach ($downloads as $document): ?>
+      <li>
+        <a href="<?= $document['url'] ?>" target="_blank"><?= $document['name'] ?></a> (<?= $document['size'] ?>)
+      </li>
+    <?php endforeach ?>
+  </ul>
+<?php endif ?>
+

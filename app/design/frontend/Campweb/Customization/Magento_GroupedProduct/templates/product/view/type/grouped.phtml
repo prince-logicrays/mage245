@@ -1,0 +1,465 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/**
+ * Grouped product data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\BaseImage
+ * @var $block \Magento\GroupedProduct\Block\Product\View\Type\Grouped
+ */
+?>
+<?php $block->setPreconfiguredValue(); ?>
+<?php $_product = $block->getProduct(); ?>
+<?php $_associatedProducts = $block->getAssociatedProducts(); ?>
+<?php $_hasAssociatedProducts = count($_associatedProducts) > 0; ?>
+
+<?php
+    $lrProductHelper = $this->helper('LR\ProductPage\Helper\Data');
+    $translationString = $lrProductHelper->getTranslateString();
+    $translationWordsArray = $lrProductHelper->getTranslations($translationString);
+
+    $matrix  =  json_decode($_product->getData('axis'), true);
+    $allSKUs =  array_map(function ($item) 
+                {
+                    return $item->getData('sku');
+                }, $_associatedProducts);
+
+   
+    $matrix['products'] = array_values(array_filter($matrix['products'], function ($product) use ($allSKUs) 
+    {
+        return in_array($product[0], $allSKUs);
+    }));
+
+    if (!in_array($matrix['first_product'], $allSKUs) && isset($matrix['products']))
+    {
+        if(isset($matrix['products'][0]))
+            $matrix['first_product'] = $matrix['products'][0][0];
+    }
+    $firstProduct = array_values(array_filter($matrix['products'], function ($item) use ($matrix) 
+    {
+        return $item[0] == $matrix['first_product'];
+    }));
+    
+    if (!empty($firstProduct)){
+        $firstProduct = $firstProduct[0][1];
+    }
+
+    $findProductArray = [];
+   
+    $classDetection = array();
+    foreach ($matrix['products'] as $key => $value) 
+    {
+        $arrayKey = implode("", $value[1]);
+        $findProductArray[$arrayKey] = $value[0];
+        $classDetection[] = implode("_",$value[1]);  
+    }
+    //   echo "<pre>";  print_r($classDetection); 
+?>
+
+<div id="axis_select" class="loading">
+    <table class="tableAxisSelect">
+        <?php foreach ($matrix['axis'] as $axisNum => $axis): ?>
+            <tr class="axis" id="axis_select_<?= $axisNum ?>" data-axis ="<?= $axisNum ?>" >
+                <th class="nowrap">
+                    <?php $labelname = $axis['name'];
+                    if(isset($translationWordsArray[$labelname]))
+                        $labelname = $translationWordsArray[$labelname];
+                    ?> 
+                    <span class="labelButton"><?= $labelname?>:</span>
+                </th>
+                <td class="buttons">
+                    <?php foreach ($axis['attributes'] as $attributeNum => $attribute) 
+                    {
+                        $class = '';
+                        if (!empty($firstProduct)) {
+                            if ($firstProduct[$axisNum] == $attributeNum) 
+                            {
+                                $class = 'selected active';
+                            } 
+                            else 
+                            {
+                                $thisProduct = $firstProduct; // copy the active product
+                                $thisProduct[$axisNum] = $attributeNum; // set a new axis
+                                $class = in_array(implode("_",$thisProduct), $classDetection) ? 'active' : 'inactive';
+
+                            }
+                        }
+
+                        // $attributeLabel = $attribute;
+                        if(isset($translationWordsArray[$attribute])):
+                            $attributeLabel = $translationWordsArray[$attribute];
+                        else:
+                            $attributeLabel = $attribute;
+                        endif;
+                        echo
+                        '<button'.
+                        ' type="button"'.
+                        ' id="axis_select_'.$axisNum.'_'.$attributeNum.'"'.
+                        ' class="changedata '.$class.'"'.
+                        ' data-axis="'.$axisNum.'"'.
+                        ' data-attribute="'.$attributeNum.'"'.
+                        ($attribute == '' ? ' style="display: none"' : '').
+                        '>'.$attributeLabel.
+                        '</button>';
+                    } 
+                    ?>
+                </td>
+            </tr>
+        <?php endforeach ?>
+    </table>
+</div>
+<?php 
+    $axisSelectJS = array(
+        'definition' => array_map(function($item) {
+          return count($item['attributes']);
+        }, $matrix['axis']),
+        'axisValue' => $firstProduct,
+        'axisOrder' => array_keys($firstProduct),
+        'dataLength' => count($firstProduct),
+        'skuPosition' => count($firstProduct)+0,
+        'hashPosition' => count($firstProduct)+1,
+        'products' => array(),
+    );
+
+    foreach ($matrix['products'] as $m) 
+    {
+        list($sku, $prod) = $m;
+        $prod[] = $sku;
+        $prod[] = $lrProductHelper->skuToHash($sku);
+        $axisSelectJS['products'][] = $prod;
+    }
+  ?>
+<script> var axisSelect = <?= json_encode($axisSelectJS) ?>; </script>
+<div class="table-wrapper grouped">
+    <table class="table data grouped"
+           id="super-product-table"
+           data-mage-init='{ "Magento_GroupedProduct/js/product-ids-resolver": {} }'>
+        <caption class="table-caption"><?= $block->escapeHtml(__('Grouped product items')) ?></caption>
+        <thead>
+        <tr>
+            <th class="col item" scope="col"><?= $block->escapeHtml(__('Product Name')) ?></th>
+            <?php if ($_product->isSaleable()) : ?>
+                <th class="col qty" scope="col"><?= $block->escapeHtml(__('Qty')) ?></th>
+            <?php endif; ?>
+        </tr>
+        </thead>
+
+        <?php if ($_hasAssociatedProducts) : ?>
+        <tbody>
+            <?php 
+                $imageHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Helper\Image::class);
+                $imageUrl = $imageHelper->getDefaultPlaceholderUrl('thumbnail'); 
+                $imageclass = 'noimage'; 
+                foreach ($_associatedProducts as $_item) : ?>
+                <?php $sku = $_item->getData('sku'); ?>
+                <?php 
+                
+                if($_item->getImage() && $_item->getImage() != 'no_selection')
+                {
+                    $productImage= $_item->getImage();
+                    $imageclass = '';
+                    $imageUrl = $this->helper('Magento\Cms\Helper\Wysiwyg\Images')->getBaseUrl().'catalog/product'.$productImage;
+                }
+                ?>
+
+                <tr data-product-id="<?= $_item->getId() ?>" data-axis-select="<?= $sku ?>" id="product_data_<?= $sku ?>" style="<?= $sku == $matrix['first_product'] ? '' : 'display: none' ?>">
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Product Name')) ?>" class="col item">
+                        <span><img class='<?= $imageclass; ?>' width="100" src="<?= $imageUrl; ?>" /> </span>
+                        <strong class="product-item-name"><?= $block->escapeHtml($_item->getName()) ?></strong>
+                        <p><?= __("item number")?> <?= $block->escapeHtml($_item->getSku()) ?></p>
+                    </td>
+                    <?php if ($_product->isSaleable()) : ?>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Qty')) ?>" class="col qty">
+                        <?php if ($block->getCanShowProductPrice($_product)) : ?>
+                            <?php if ($block->getCanShowProductPrice($_item)) : ?>
+                                <?= /* @noEscape */ $block->getProductPrice($_item) ?>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if ($_item->isSaleable()) : ?>
+                        <div class="control qty">
+                            <input type="number"
+                                   name="super_group[<?= $block->escapeHtmlAttr($_item->getId()) ?>]"
+                                   data-selector="super_group[<?= $block->escapeHtmlAttr($_item->getId()) ?>]"
+                                   value="<?= $block->escapeHtmlAttr($_item->getQty() * 1) ?>"
+                                   title="<?= $block->escapeHtmlAttr(__('Qty')) ?>"
+                                   class="input-text qty"
+                                   data-validate="{'validate-grouped-qty':'#super-product-table'}"
+                                   data-errors-message-box="#validation-message-box"/>
+                        </div>
+                    <?php else : ?>
+                        <div class="stock unavailable" title="<?= $block->escapeHtmlAttr(__('Availability')) ?>">
+                            <span><?= $block->escapeHtml(__('Out of stock')) ?></span>
+                        </div>
+                    <?php endif; ?>
+                    </td>
+                    <?php endif; ?>
+                </tr>
+                <?php if ($block->getCanShowProductPrice($_product)
+                && $block->getCanShowProductPrice($_item)
+                && trim($block->getProductPriceHtml(
+                    $_item,
+                    \Magento\Catalog\Pricing\Price\TierPrice::PRICE_CODE
+                ))) : ?>
+                <tr class="row-tier-price">
+                    <td colspan="2">
+                        <?= $block->getProductPriceHtml(
+                            $_item,
+                            \Magento\Catalog\Pricing\Price\TierPrice::PRICE_CODE
+                        ) ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        <?php endforeach; ?>
+        </tbody>
+        <?php else : ?>
+        <tbody>
+            <tr>
+                <td class="unavailable"
+                    colspan="<?php if ($_product->isSaleable()) : ?>4<?php else : ?>3<?php endif; ?>">
+                    <?= $block->escapeHtml(__('No options of this product are available.')) ?>
+                </td>
+            </tr>
+        </tbody>
+        <?php endif; ?>
+    </table>
+</div>
+<div id="validation-message-box"></div>
+
+<?php
+    $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+    $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
+    $baseUrl = $storeManager->getStore()->getBaseUrl();  
+
+?>
+<script type="text/javascript">
+    
+    var find_product_data = <?php echo json_encode($findProductArray); ?>;
+    var base_url = '<?= $baseUrl; ?>';
+    require([
+        'jquery','mage/gallery/gallery'
+    ], function($,gallery){
+
+        $(function () 
+        {      
+            var api;
+            $('[data-gallery-role=gallery-placeholder]').on('gallery:loaded', function () {
+                $(this).on('fotorama:ready', function(){
+                    //console.log("fotorama:ready called");
+                    api = $(this).data('gallery');                    
+                });
+            });     
+            // select product by hash
+            updateUrls();
+            if (!showSkuByUrl()) {
+                showProduct(axisSelect.products[0], false, api);
+            }
+            // remove loading class (which disables the transitions)
+            $('#axis_select')
+            .removeClass('loading')
+            // get all buttons
+            .find('button')
+            // set onClick
+            .on('click', function () {
+                var data = $(this).data();
+                if(typeof api === 'undefined') {
+                    var api = $("[data-gallery-role=gallery-placeholder]").data('gallery');
+                }
+                setAxisValue(data.axis, data.attribute,api);
+                updateUrls();
+            });
+
+            $('.grouped-items-table-wrapper').find('input.qty').on('blur', function () {
+            var value = parseInt($(this).val());
+            if (isNaN(value) || value < 0) {
+                $(this).val(0);
+            }
+            })
+        });
+
+        // Detect SKU in hash of url
+        function showSkuByUrl() 
+        {
+            if (!window.location.hash) 
+            {
+                return false;
+            }
+
+            var products = axisSelect.products.filter(function (p) 
+            {
+                return p[axisSelect.hashPosition] == window.location.hash;
+            });
+
+            if (products.length == 1) 
+            {
+                // found exact one match: select that product
+                showProduct(products[0], false, false);
+                return true;
+            }
+            else 
+            {
+                // couldn't find the requested product: remove hash
+                window.location.hash = '';
+                return false;
+            }
+        }
+
+        // A click on an attribute -> show the best matching product
+        function setAxisValue(newAxis, newAttribute, api) 
+        {
+            // remove the selected axis from the ordering
+            axisSelect.axisOrder = axisSelect.axisOrder.filter(function (axis) {
+            return axis != newAxis;
+            });
+
+            // filter all products to match the new selected attribute
+            var products = axisSelect.products.filter(function (product) {
+                return product[newAxis] == newAttribute;
+            });
+
+            // filter (in order) all remaining products to best match the previous requests
+            // (skip an axis if the result is empty)
+            axisSelect.axisOrder.forEach(function (axis) {
+            var filteredProducts = products.filter(function (product) {
+                return product[axis] == axisSelect.axisValue[axis];
+            });
+            if (filteredProducts.length > 0) {
+                products = filteredProducts;
+            }
+            });
+            
+            // add the selected axis to the front of the ordering
+            axisSelect.axisOrder.unshift(newAxis);
+
+            // show the first/one filtered product
+            if(products[0])
+            {
+                showProduct(products[0], true, api);
+            }
+            
+        }
+
+        // Show the selected product
+        function showProduct(product, swapImage, api) 
+        {
+            // extract sku
+            var sku = product[axisSelect.skuPosition];
+            var hash = product[axisSelect.hashPosition];
+            product = product.slice(0, axisSelect.dataLength);
+            // check if it's changed
+            if (axisSelect.axisValue == product) {
+            return;
+            }
+            // set current axis values to new product
+            axisSelect.axisValue = product;
+            // set all buttons according to the current state
+            axisSelect.definition.forEach(function (count, axis) {
+            var allInactive = true;
+            for (var attribute = 0; attribute < count; attribute++) {
+                var cls = 'selected';
+                if (axisSelect.axisValue[axis] != attribute) {
+                var products = axisSelect.products.filter(function (product) {
+                    for (var axis2 = 0; axis2 < axisSelect.definition.length; axis2++) {
+                    if (product[axis2] != ((axis2 == axis) ? attribute : axisSelect.axisValue[axis2])) {
+                        return false;
+                    }
+                    }
+                    return true;
+                });
+                if (products.length == 0) {
+                    cls = 'inactive';
+                } else {
+                    cls = 'active';
+                }
+                }
+                var select = $('#axis_select_' + axis + '_' + attribute);
+                if (cls != 'inactive' && select.css('display') != 'none') {
+                allInactive = false;
+                }
+                select.removeClass('selected active inactive').addClass(cls);
+            }
+            if (allInactive) {
+                //console.log('inactive: ' + axis);
+                $('#axis_select_' + axis).hide();
+            } else {
+                //console.log('active: ' + axis);
+                $('#axis_select_' + axis).show();
+            }
+            });
+
+            var wrapper = $('.grouped-items-table-wrapper');
+            var quantities = wrapper.find('input.qty');
+            var qtys = quantities.map(function () {
+            var value = parseInt($(this).val());
+            return isNaN(value) ? 1 : value;
+            });
+            // have at least 1 product preselected
+            qtys.push(1);
+            var maxQty = Math.max.apply(null, qtys);
+
+            // change qty to 0 for all products
+            quantities.val(0);
+            // show/hide products/technical data
+            $('[data-axis-select]').hide().find('input.qty').val(0);
+            $('[data-axis-select="' + sku + '"]').show().find('input.qty').val(maxQty);
+            // show image
+            var images = $('.product-image-thumbs a[data-skus]').filter(function () {
+            return $.inArray(sku, $(this).data('skus').split(',')) > -1;
+            });
+            var sourceImage = jQuery("#super-product-table tbody tr:visible td:first-child").find(".noimage");
+            if (swapImage && $(sourceImage).length == 0) 
+            {
+                /* var replaceImage = $(".fotorama__stage .fotorama__grab div[data-active='true']");
+                var imageUrl = $("#super-product-table tbody tr:visible td:first-child").find('img').attr('src'); 
+                $(replaceImage).attr('href',imageUrl);
+                $(replaceImage).children().attr('src',imageUrl); */
+                
+                var imageUrl = jQuery("#super-product-table tbody tr:visible td:first-child").find('img').attr('src');
+                var filenameCheck = imageUrl.split('/').pop();
+                var counter = 0;
+                $(".fotorama__nav__shaft").children().each(function()
+                {
+                    var imageTag = $(this).children().children();
+                    var imageSrc = $(imageTag).attr('src');
+                    if(imageSrc != undefined)
+                    {
+                        var filename = imageSrc.split('/').pop();
+                        if(filename == filenameCheck)
+                        {
+                            updateThumbnailImage(api,counter);
+                        }
+                    }
+                    counter++;
+                });
+            }
+            // update url
+            //window.location.hash = hash;
+        }
+
+        function updateUrls() 
+        {
+            // var productId = $('#super-product-table tbody tr:visible').attr('data-product-id');
+            
+            // $('.tocompare, .towishlist').each(function(index, element) 
+            // {
+            //     var $linkNode = $(element);
+            //     var origRef = $linkNode.attr('data-post');
+            //     var origRefObj = JSON.parse(origRef);
+            //     origRefObj.data['product'] = productId;
+            //     newRef =  JSON.stringify(origRefObj);
+            //     $linkNode.attr('data-post', newRef);
+            // });
+        }
+
+        function updateThumbnailImage(api,index)
+        {
+            //console.log("updateThumbnailImage called with show");
+            api.seek(index);           
+            
+           
+        }
+    });
+
+</script>

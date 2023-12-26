@@ -1,0 +1,31 @@
+<?php
+$_helper = $this->helper('Magento\Catalog\Helper\Output');
+$_product = $block->getProduct();
+$description = $_product->getDescription();
+$shortDescription = substr(strip_tags($description), 0, 450); 
+?>
+<?php if ($description && strlen( strip_tags($description) ) > 450): ?>
+    <div class="product-description full_data">
+        <div class="value"><?=  __($description) ?></div>
+    </div>
+    <div class="product-description short_data">
+        <div class="value"><?=  __($shortDescription) ?></div>
+    </div> 
+    <div id="more" class="more"> <?= __('Show more') ?></div>
+<?php else: ?>
+    <div class="product-description short_data">
+        <div class="value"><?=  __($description) ?></div>
+    </div>
+<?php endif; ?>
+
+<script>
+   requirejs(['jquery'], function($){
+    $(".more").toggle(function(){
+    $(this).text("Visa mindre").siblings(".full_data").show();
+    $(".short_data").hide();    
+    }, function(){
+        $(this).text("Visa mer").siblings(".full_data").hide();
+        $(".short_data").show();
+    });
+   });
+</script>

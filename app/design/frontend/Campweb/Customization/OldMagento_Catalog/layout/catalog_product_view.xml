@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+   <body>
+   		<referenceBlock name="product.attributes" remove="true" />
+       	<referenceBlock name="product.info.description" remove="true"/>
+       	<referenceBlock name="product.info.details">
+			<block class="Magento\Catalog\Block\Product\View" name="technical_info" template="product/view/technical_info.phtml" group="detailed_info" >
+			   	<arguments>
+			       <argument translate="true" name="title" xsi:type="string">Technical Information</argument>
+			       <argument name="sort_order" xsi:type="string">0</argument>
+			   </arguments>
+			</block>
+
+			<block class="Magento\Catalog\Block\Product\View" name="download_tab" template="product/view/download.phtml" group="detailed_info" >
+			   	<arguments>
+			       <argument translate="true" name="title" xsi:type="string">Download</argument>
+			       <argument name="sort_order" xsi:type="string">5</argument>
+			   </arguments>
+			</block>
+
+			<block class="Magento\Catalog\Block\Product\View" name="video_tab" template="product/view/video.phtml" group="detailed_info" >
+			   	<arguments>
+			       <argument translate="true" name="title" xsi:type="string">Video</argument>
+			       <argument name="sort_order" xsi:type="string">10</argument>
+			   </arguments>
+			</block>
+       	</referenceBlock>
+       	<referenceContainer name="product.info.main">
+            <block class="Magento\Catalog\Block\Product\View" name="product_description" template="Magento_Catalog::product/view/description.phtml" after="product.info.price"/>
+			<block class="Magento\Catalog\Block\Product\View" name="product_logos" template="Magento_Catalog::product/view/logo_images.phtml" after="-"/>
+
+        </referenceContainer>
+   </body>
+</page>

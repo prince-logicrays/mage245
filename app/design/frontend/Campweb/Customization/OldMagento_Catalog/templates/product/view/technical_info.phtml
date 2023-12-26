@@ -1,0 +1,136 @@
+<?php
+/** @var \Magento\Catalog\Block\Product\View $block */
+$product = $block->getProduct();
+if( $product->getTypeId() == 'grouped' )
+{
+	$listProducts = $product->getTypeInstance()->getAssociatedProducts($product);
+	$matrix = json_decode($product->getData('axis'), true);
+	$firstProduct = $matrix['first_product'];
+} 
+else 
+{
+    $listProducts = array($product);
+    $firstProduct = $product->getData('sku');
+}
+
+$lrProductHelper = $this->helper('LR\ProductPage\Helper\Data');
+
+//$translationString = $lrProductHelper->getTranslateString();
+//$translationWordsArray = $lrProductHelper->getTranslations($translationString);
+
+?>
+<?php foreach ($listProducts as $key => $_pro)
+{
+	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+	$productId = $_pro->getId();
+  
+  $product = $objectManager->create('Magento\Catalog\Model\Product')->load($productId);
+  $sku = $product->getData('sku');
+	$info = @json_decode($product->getData('info'), true);
+
+  if (!is_array($info)) {
+      $info = array();
+    }
+    ?>
+
+  <div data-axis-select="<?= $sku ?>" style="display: <?= $sku == $firstProduct ? 'block' : 'none' ?>">
+
+    <?php if (array_key_exists('ghs', $info)): ?>
+      <div class="product-ghs">
+        <h3><?= $this->__("Hazard warnings") ?></h3>
+        <div class="ghs-images">
+          <?php foreach (explode(',', $info['ghs']) as $ghs): ?>
+            <img src="<?= $this->getSkinUrl('images/ghs/'.substr($ghs, 3).'.gif') ?>"
+                 alt="<?= $ghs ?>"
+                 title="<?= $this->__($ghs) ?>">
+          <?php endforeach ?>
+        </div>
+      </div>
+    <?php endif ?>
+
+  <?php if (array_key_exists('h_statements', $info)): ?>
+      <?php $head = false; $body = array(); ?>
+      <?php
+        foreach (explode(',', $info['h_statements']) as $statement) {
+          $text = $this->__('H-Statement: '.$statement);
+          if ($head === false && in_array($statement, array('Achtung', 'Gefahr'))) {
+            $head = $text;
+          } else {
+            $body[] = $text;
+          }
+        }
+        sort($body);
+      ?>
+      <div class="product-h_statements">
+        <?php if ($head !== false): ?>
+          <h3><?= $head ?></h3>
+        <?php endif; ?>
+        <?= implode('<br>', $body) ?>
+      </div>
+    <?php endif ?>
+
+
+
+  <?php
+  $techData = @json_decode($product->getData('tech_data'), true); 
+	if (is_array($techData) && count($techData) > 0): ?>
+
+      <table class="data-table product-attribute-specs">
+        <colgroup>
+          <col width="25%">
+          <col>
+        </colgroup>
+        <tbody>
+          <?php foreach ($techData as $item): ?>
+            <tr>
+              <?php /* if(isset($translationWordsArray[$item[0]])):
+                      $label = $translationWordsArray[$item[0]]; 
+                    else:
+                      $label = $item[0];
+                    endif; */
+
+                   /*  if(isset($translationWordsArray[$item[1]])):
+                      $dataValue = $translationWordsArray[$item[1]]; 
+                    else:
+                      $dataValue = $item[1];
+                    endif; */
+                    $label = $item[0];
+                    $dataValue = $item[1];
+                    ?>
+              <th class="label"><?= __($label); ?></th>
+              <td class="data"><?= __($dataValue); ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+
+    <?php endif; ?>
+
+    </div>
+ <?php    
+}
+ 
+$product->getData('logos');
+$logos = @json_decode($product->getData('logos'), true); 
+if (is_array($logos)): ?>
+  <?php foreach ($logos as $logo): ?>
+    <?php
+    $src = $lrProductHelper->getCDNImageUrl($logo);
+    /*$src = Saltation_Image_Helper_Mage_Catalog_Image::getCDNImageUrl(
+      $logo,
+      150, // $frameWidth, default
+      150, // $frameHeight, default
+      false, // $keepFrame, default
+      true, // $keepAspectRatio, default
+      true, // $constrainOnly, default
+      true // $withMeta - as array
+    )*/
+    ?>
+
+    <?php if (is_array($src)): ?>
+      <img src="<?= $src['url'] ?>" width="<?= $src['width'] ?>" height="<?= $src['height'] ?>"/><br>
+    <?php else: ?>
+      <img src="<?= $src ?>" width="<?= 150 ?>" /><br>
+    <?php endif; ?>
+  <?php endforeach; ?>
+<?php endif;  ?>

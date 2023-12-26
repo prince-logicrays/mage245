@@ -1,0 +1,36 @@
+<?php 
+    $lrProductHelper = $this->helper('LR\ProductPage\Helper\Data');
+    $_product = $block->getProduct(); 
+
+    $videos = array();
+    $info = @json_decode($_product->getData('info'), true);
+    if (is_array($info) && isset($info['videos'])):
+      $videos = $lrProductHelper->getVideos($info['videos']); 
+    endif;
+?>
+<?php if (count($videos) > 0): ?>
+  <?php foreach ($videos as $video): ?>
+    <div class="video">
+      <a href="<?= $video['url'] ?>" target="_blank">
+        <?php if (isset($video['preview'])): ?>
+          <img src="<?= $video['preview'] ?>" alt="<?= $video['name'] ?>" class="preview">
+        <?php else: ?>
+          <img src="http://img.youtube.com/vi/0/1.jpg" alt="no-image">
+        <?php endif ?>
+        <span class="name"><?= $video['name'] ?></span>
+      </a>
+    </div>
+  <?php endforeach ?>
+  <style type="text/css">
+    .video {
+      display: block;
+      width: 120px;
+      padding: 8px;
+      opacity: 0.7;
+      transition: opacity 250ms ease-in-out;
+    }
+    .video:hover {
+      opacity: 1;
+    }
+  </style>
+<?php endif ?>

@@ -1,0 +1,62 @@
+<?php $_product = $block->getProduct(); ?>
+<?php $buttonTitle = __('Add to Cart'); ?>
+<?php if ($_product->isSaleable()):?>
+<div class="box-tocart">
+    <div class="fieldset">
+        <?php if ($block->shouldRenderQuantity()):?>
+        <div class="field qty">
+            <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+            <div class="control">
+                <button onclick="decreaseOptionQty(<?= /** noEscap */ $_product->getId() ?>); return false;"
+                    class="decreaseOptionQty decrease-btn-action_<?= /** noEscap */ $_product->getId() ?>"
+                    title="Decrease Qty">-</button>
+
+                <input type="number"
+                    name="qty"
+                    id="qty input-qty"
+                    min="0"
+                    value="<?= $block->getProductDefaultQty() * 1 ?>"
+                    title="<?= $block->escapeHtmlAttr(__('Qty')) ?>"
+                    class="input-text qty"
+                    data-validate="<?= $block->escapeHtml(json_encode($block->getQuantityValidators())) ?>"
+                    />
+
+                <button onclick="increaseOptionQty(<?= /** noEscap */ $_product->getId() ?>); return false;"
+                    class="increaseOptionQty increase-btn-action_<?= /** noEscap */ $_product->getId() ?>"
+                    title="Increase Qty">+</button>
+            </div>
+        </div>
+        <?php endif; ?>
+        <div class="actions">
+            <button type="submit"
+                    title="<?= $block->escapeHtmlAttr($buttonTitle) ?>"
+                    class="action primary tocart"
+                    id="product-addtocart-button" disabled>
+                <span><?= $block->escapeHtml($buttonTitle) ?></span>
+            </button>
+            <?= $block->getChildHtml('', true) ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+<script type="text/x-magento-init">
+    {
+        "#product_addtocart_form": {
+            "Magento_Catalog/js/validate-product": {}
+        }
+    }
+</script>
+
+<script>
+    function decreaseOptionQty(itemId) {
+        var qtyInput = document.querySelector('.qty[name="qty"]');
+        if (qtyInput.value > 1) {
+            qtyInput.value = parseInt(qtyInput.value) - 1;
+        }
+    }
+
+    function increaseOptionQty(itemId) {
+        var qtyInput = document.querySelector('.qty[name="qty"]');
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+    }
+</script>

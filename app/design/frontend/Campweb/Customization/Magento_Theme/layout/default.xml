@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page layout="3columns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="page.messages">
+            <block class="Magento\Framework\View\Element\Messages" name="messages" as="messages" template="Magento_Theme::messages.phtml"/>
+        </referenceContainer>
+        <referenceContainer name="header-wrapper">
+            <container name="header-right" htmlTag="div" htmlClass="header-right"/>
+        </referenceContainer>
+        <move element="top.search" destination="header-right" />
+        <move element="catalog.topnav" destination="header-wrapper" before="logo"/>
+        <move element="minicart" destination="header-right" />
+        <!-- <move element="header-right" destination="navigation.sections"/> -->
+        <referenceBlock name="store_switcher" remove="true" />
+        <referenceBlock name="privacy-policy-link" remove="true" />
+        <!-- <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link" name="custom-link">
+                <arguments>
+                    <argument name="label" xsi:type="string">Köp- och leveransvillkor</argument>
+                    <argument name="path" xsi:type="string">villkor.html</argument>
+                </arguments>
+            </block>
+        </referenceBlock> -->
+        <referenceContainer name="footer">
+            <block class="Magento\Cms\Block\Block" name="contact_info" after="footer_links">
+                <arguments>
+                    <argument name="block_id" xsi:type="string">contact_info</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+
+        <move element="privacy-policy-link" destination="footer_links" after="search-term-popular-link"/>
+    </body>
+</page>

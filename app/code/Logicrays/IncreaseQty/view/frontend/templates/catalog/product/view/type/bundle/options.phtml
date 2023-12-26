@@ -1,0 +1,148 @@
+<?php /** @var $block Magento\Bundle\Block\Catalog\Product\View\Type\Bundle */ ?>
+<?php
+$product = $block->getProduct();
+$helper = $this->helper(Magento\Catalog\Helper\Output::class);
+$stripSelection = $product->getConfigureMode() ? true : false;
+$options = $block->decorateArray($block->getOptions($stripSelection));
+?>
+<?php if ($product->isSaleable()):?>
+    <?php if (count($options)): ?>
+<script type="text/x-magento-init">
+    {
+        "#product_addtocart_form": {
+            "priceBundle": {
+                "optionConfig": <?= /* @noEscape */ $block->getJsonConfig() ?>,
+                "controlContainer": ".field.option"
+            }
+        }
+    }
+</script>
+        <fieldset class="fieldset fieldset-bundle-options">
+            <legend id="customizeTitle" class="legend title">
+                <span><?= $block->escapeHtml(__('Customize %1', $helper->productAttribute($product, $product->getName(), 'name'))) ?></span>
+            </legend><br />
+            <?= $block->getChildHtml('product_info_bundle_options_top') ?>
+            <?php foreach ($options as $option): ?>
+                <?php
+                if (!$option->getSelections()) {
+                    continue;
+                } else {
+                    echo $block->getOptionHtml($option);
+                }
+                ?>
+            <?php endforeach; ?>
+        </fieldset>
+    <?php else: ?>
+        <p class="empty"><?= $block->escapeHtml(__('No options of this product are available.')) ?></p>
+    <?php endif; ?>
+<?php endif;?>
+
+
+<script>
+    function decreaseQty(itemId) {
+    } function increaseQty(itemId) {
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Get all buttons with class "increaseQty" and add click event listeners
+        var increaseButtons = document.querySelectorAll(".increaseQty");
+        increaseButtons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                var targetId = button.getAttribute("data-target");
+
+                var getTargetQty = targetId.split("-");
+                var findId = 'bundle-option-qty-input'+getTargetQty[2];
+                var adminQty = document.getElementById(findId);
+                var inputElement = document.getElementById(targetId);
+
+                var isManageStock = adminQty.value.split("_");
+                const arrayLength = isManageStock.length;
+
+                var currentValue = parseInt(inputElement.value);
+
+                if (currentValue >= parseInt(adminQty.value)) {
+                    if (arrayLength >= 2) {
+                        button.disabled = false;
+                        inputElement.value = currentValue + 1;
+                    } else {
+                        button.disabled = true;
+                    }
+                } else {
+                    button.disabled = false;
+                    inputElement.value = currentValue + 1;
+                }
+            });
+        });
+
+        // Get all buttons with class "decreaseQty" and add click event listeners
+        var decreaseButtons = document.querySelectorAll(".decreaseQty");
+        decreaseButtons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                var targetId = button.getAttribute("data-target");
+                var inputElement = document.getElementById(targetId);
+                var currentValue = parseInt(inputElement.value);
+
+                var getTargetQty = targetId.split("-");
+                var findId = 'bundle-option-qty-input'+getTargetQty[2];
+                var adminQty = document.getElementById(findId);
+
+                if (currentValue > 1) {
+                    inputElement.value = currentValue - 1;
+                    if (currentValue < parseInt(adminQty.value)) {
+                        var targetButtonClass = 'increase-btn-action_'+getTargetQty[2];
+                        const targetButton = document.querySelector(`.${targetButtonClass}`);
+                        if (targetButton) {
+                            targetButton.disabled = false;
+                        }
+                    }
+                }
+            });
+        });
+
+        // If Radio button is enable for products selections
+        const selectedRadioButton = document.querySelector('.bundle-option-radio-change:checked');
+        if (selectedRadioButton) {
+            const dataTextValue = selectedRadioButton.getAttribute('data-text');
+            const inputBox = document.querySelector('.bundle-option-qty-input-values');
+            if (inputBox) {
+                inputBox.value = dataTextValue;
+            }
+        }
+        const radioButtons = document.querySelectorAll('.bundle-option-radio-change');
+        const targetInput = document.querySelector('.bundle-option-qty-input-values');
+        const btnIncreaseQty = document.querySelectorAll('.increaseQty-radio-select');
+
+        radioButtons.forEach(radioButton => {
+            radioButton.addEventListener('change', function() {
+                // Check if the radio button is checked
+                if (this.checked) {
+                    const dataTextValue = this.getAttribute('data-text');
+                    targetInput.value = dataTextValue;
+                    btnIncreaseQty.forEach(button => {
+                        button.disabled = false;
+                    });
+                }
+            });
+        });
+
+        // If DropDown is enable for products selections
+        const dropdown = document.querySelector('.bundle-option-dropdown-select');
+        const inputBox = document.querySelector('.bundle-option-dropdown-select-qty');
+        const increaseQtyBtn = document.querySelector('.increaseQty-dropdown-select');
+        dropdown.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const dataText = selectedOption.getAttribute('data-text');
+            inputBox.value = dataText;
+            increaseQtyBtn.disabled = false;
+        });
+    });
+
+    window.onload = function() {
+        const dropdown = document.querySelector('.bundle-option-dropdown-select');
+        const inputBox = document.querySelector('.bundle-option-dropdown-select-qty');
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        const dataText = selectedOption.getAttribute('data-text');
+        inputBox.value = dataText;
+    };
+
+</script>

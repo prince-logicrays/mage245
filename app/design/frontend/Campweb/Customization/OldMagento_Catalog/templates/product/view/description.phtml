@@ -1,0 +1,38 @@
+<?php
+$_helper = $this->helper('Magento\Catalog\Helper\Output');
+$_product = $block->getProduct();
+$description = $_product->getDescription();
+
+/* $objectManager = \Magento\Framework\App\ObjectManager::getInstance(); 
+$product = $objectManager->get('Magento\Catalog\Model\Product')->setStoreId(0)->load($_product->getId());
+$description = $product->getDescription(); */
+
+$shortDescription = substr(strip_tags($description), 0, 450);
+
+//$tidy = new tidy; $tidy->parseString($content); $tidy->cleanRepair();
+?>
+<?php if ($description && strlen($description) > 450): ?>
+    <div class="product-description full_data">
+        <div class="value"><?=  __($description) ?></div>
+    </div>
+    <div class="product-description short_data">
+        <div class="value"><?=  __($shortDescription) ?></div>
+    </div>
+    <span class="more"> <?= __('Show more') ?></span>
+<?php else: ?>
+    <div class="product-description short_data">
+        <div class="value"><?=  __($description) ?></div>
+    </div>
+<?php endif; ?>
+
+<script>
+   requirejs(['jquery'], function($){
+    $(".more").toggle(function(){
+    $(this).text("Visa mindre").siblings(".full_data").show();
+    $(".short_data").hide();    
+    }, function(){
+        $(this).text("Visa mer").siblings(".full_data").hide();
+        $(".short_data").show();
+    });
+   });
+</script>

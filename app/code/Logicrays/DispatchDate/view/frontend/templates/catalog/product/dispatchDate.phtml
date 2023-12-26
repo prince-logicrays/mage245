@@ -1,0 +1,47 @@
+<div class="delivery-info">
+<span>Est Dispatch Date: </span>
+<strong><label id="delivery-estimation-date"><?= $block->escapeHtml($block->getDispatchDate()); ?></label></strong>
+</div>
+
+<script>
+    require(['jquery'], function ($) {
+        $(document).ready(function () {
+            var days;
+            $('.product-custom-option.admin__control-select').on('change', function() {
+                if ($(this).val) {
+                    var selectedOption = $('.product-custom-option.admin__control-select').find(":selected").text();
+                    var selectedOptionlower = selectedOption.toLowerCase();
+                    if (selectedOptionlower.indexOf('days') > -1) {
+                        if ((selectedOptionlower.indexOf('to ') > -1)) {
+                            optionValue1 = selectedOptionlower.split('to ')[1];
+                            optionValue2 = optionValue1.substring(0, optionValue1.indexOf(" "));
+                            days = optionValue2;
+                        } else {
+                            optionValue1 = selectedOptionlower.split('(')[1];
+                            optionValue2 = parseInt(optionValue1);
+                            days = optionValue2;
+                        }
+                    } else {
+                        days = '';
+                    }
+                }
+                var ajaxurl = "<?= $block->escapeHtml($block->getUrl()).'dispatch/date/index'?>";
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        days: days,
+                    },
+                    success: function(response) {
+                        console.log(response);
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+            });
+            
+        });
+    });
+</script>

@@ -1,0 +1,20 @@
+<?php
+$product = $block->getProduct();
+$helperObject = $this->helper('\LR\ProductPage\Helper\Data');
+$mediaUrl = $helperObject->getMediaUrl();
+$info = @json_decode($product->getInfo(),true);
+if(is_array($info) && array_key_exists('button', $info))
+{ ?>
+    <div class="logo_images">
+        <?php
+            foreach(explode(',', $info['button']) as $button)
+            { 
+            ?>
+                <img src="<?php echo $mediaUrl.'button/'.$button.'.jpg' ?>" />
+            <?php
+            }
+        ?>
+    </div>
+    <?php
+}
+?>

@@ -1,0 +1,184 @@
+<?php
+$block->setPreconfiguredValue();
+$customBlock = $this->getLayout()->createBlock(\Logicrays\IncreaseQty\Block\GeneralData::class);
+?>
+<?php $_product = $block->getProduct(); ?>
+<?php $_associatedProducts = $block->getAssociatedProducts(); ?>
+<?php $_hasAssociatedProducts = count($_associatedProducts) > 0; ?>
+
+<div class="table-wrapper grouped">
+    <table class="table data grouped"
+            id="super-product-table"
+            data-mage-init='{ "Magento_GroupedProduct/js/product-ids-resolver": {} }'>
+        <caption class="table-caption"><?= /** noEscap */ __('Grouped product items') ?></caption>
+        <thead>
+            <tr>
+                <th class="col item" scope="col"><?= /** noEscap */ __('Product Name') ?></th>
+                <?php if ($_product->isSaleable()): ?>
+                    <th class="col qty" scope="col"><?= /** noEscap */ __('Qty') ?></th>
+                <?php endif; ?>
+            </tr>
+        </thead>
+
+        <?php if ($_hasAssociatedProducts): ?>
+        <tbody>
+            <?php foreach ($_associatedProducts as $_item): ?>
+                <?php
+                    $productStockInfo = $customBlock->getStockItem($_item->getId());
+                    $isStockManage = $customBlock->isStockManage();
+                    $stockItemQty = $productStockInfo->getQty();
+                ?>
+            <tr>
+                <td data-th="<?= $block->escapeHtml(__('Product Name')) ?>" class="col item">
+                    <strong class="product-item-name"><?= $block->escapeHtml($_item->getName()) ?></strong>
+                    <?php if ($block->getCanShowProductPrice($_product)): ?>
+                        <?php if ($block->getCanShowProductPrice($_item)): ?>
+                            <?= /** noEscap */ $block->getProductPrice($_item) ?>
+                        <?php endif; ?>
+                        <?php endif; ?>
+                </td>
+
+                <?php if ($_product->isSaleable()): ?>
+                <td data-th="<?= $block->escapeHtml(__('Qty')) ?>" class="col qty">
+                    <?php if ($_item->isSaleable()): ?>
+                    <div class="box-tocart">
+                        <div class="fieldset">
+                            <div class="control qty">
+                                <div class="control" data-bind="scope: 'qty_change'">
+                                    <?php
+                                    $manageStock = $productStockInfo->getManageStock();
+                                    $useConfigManageStock = $productStockInfo->getUseConfigManageStock();
+                                    if ($productStockInfo->getUseConfigManageStock()) {
+                                        $manageStock = $isStockManage;
+                                    }
+                                    ?>
+                                    <span class="manageStock_<?= /** noEscap */ $_item->getId() ?>" hidden>
+                                        <?= /** noEscap */ $manageStock ? $manageStock : 0 ?>
+                                    </span>
+                                    <input type="text" name="group_item[<?= /** noEscap */ $_item->getId() ?>]"
+                                    class="stock-item-qty" value="<?= /** noEscap */ $stockItemQty?>" hidden/>
+
+                                    <button onclick="decreaseQty(<?= /** noEscap */ $_item->getId() ?>); return false;"
+                                    class="decreaseQty decrease-btn-action_<?= /** noEscap */ $_item->getId() ?>"
+                                    title="Decrease Qty">-</button>
+
+                                    <input data-bind="value: qty()"
+                                        type="number"
+                                        name="super_group[<?= /** noEscap */ $_item->getId() ?>]"
+                                        data-selector="super_group[<?= /** noEscap */ $_item->getId() ?>]"
+                                        value="<?= /** noEscap */ $_item->getQty() * 1 ?>"
+                                        id="qty_<?= /** noEscap */ $_item->getId();?>"
+                                        maxlength="5"
+                                        title="<?=/** noEscap */ __('Qty') ?>"
+                                        class="input-text qty"
+                                        data-validate="{'validate-grouped-qty':'#super-product-table'}"
+                                        data-bind=""ata-errors-message-box="#validation-message-box"/>
+
+                                    <button onclick="increaseQty(<?= /** noEscap */ $_item->getId() ?>); return false;"
+                                    class="increaseQty increase-btn-action_<?= /** noEscap */ $_item->getId() ?>"
+                                    title="Increase Qty">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        <?php if ($block->isRedirectToCartEnabled()): ?>
+                            <script type="text/x-magento-init">
+                            {
+                                "#product_addtocart_form": {
+                                    "Magento_Catalog/product/view/validation": {
+                                        "radioCheckboxClosest": ".nested"
+                                    }
+                                }
+                            }
+                        </script>
+                        <?php else: ?>
+                            <script>
+                                require([
+                                    'jquery',
+                                    'mage/mage',
+                                    'Magento_Catalog/product/view/validation',
+                                    'Magento_Catalog/js/catalog-add-to-cart'
+                                ], function ($) {
+                                    'use strict';
+
+                                    $('#product_addtocart_form').mage('validation', {
+                                        radioCheckboxClosest: '.nested',
+                                        submitHandler: function (form) {
+                                            var widget = $(form).catalogAddToCart({
+                                                bindSubmit: false
+                                            });
+                                            widget.catalogAddToCart('submitForm', $(form));
+                                            return false;
+                                        }
+                                    });
+                                });
+                            </script>
+                        <?php endif; ?>
+
+                    <?php else: ?>
+                        <div class="stock unavailable" title="<?= /** noEscap */ __('Availability') ?>">
+                            <span><?= /** noEscap */ __('Out of stock') ?></span>
+                        </div>
+                    <?php endif; ?>
+                </td>
+                <?php endif; ?>
+            </tr>
+                <?php if ($block->getCanShowProductPrice($_product)
+                    && $block->getCanShowProductPrice($_item)
+                    && trim($block->getProductPriceHtml(
+                        $_item,
+                        \Magento\Catalog\Pricing\Price\TierPrice::PRICE_CODE
+                    ))): ?>
+                <tr class="row-tier-price">
+                    <td colspan="2">
+                        <?= $block->getProductPriceHtml(
+                            $_item,
+                            \Magento\Catalog\Pricing\Price\TierPrice::PRICE_CODE
+                        ) ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        <?php endforeach; ?>
+        </tbody>
+        <?php else: ?>
+        <tbody>
+            <tr>
+                <td class="unavailable"
+                    colspan="<?php if ($_product->isSaleable()): ?>4<?php else: ?>3<?php endif; ?>">
+                    <?= /** noEscap */ __('No options of this product are available.') ?>
+                </td>
+            </tr>
+        </tbody>
+        <?php endif; ?>
+    </table>
+</div>
+<div id="validation-message-box"></div>
+
+<script>
+    function decreaseQty(itemId) {
+        var qtyInput = document.querySelector('.qty[name="super_group[' + itemId + ']"]');
+        var stockItemQty = document.querySelector('.stock-item-qty[name="group_item[' + itemId + ']"]');
+        var button = document.querySelector('.increase-btn-action_'+itemId);
+
+        if (qtyInput.value > 1) {
+            qtyInput.value = parseInt(qtyInput.value) - 1;
+            if (parseInt(qtyInput.value) < parseInt(stockItemQty.value)) {
+                button.disabled = false;
+            }
+        }
+    }
+
+    function increaseQty(itemId) {
+        var qtyInput = document.querySelector('.qty[name="super_group[' + itemId + ']"]');
+        var stockItemQty = document.querySelector('.stock-item-qty[name="group_item[' + itemId + ']"]');
+        var button = document.querySelector('.increase-btn-action_'+itemId);
+        var manageStock = document.querySelector('.manageStock_'+itemId);
+
+        if (parseInt(qtyInput.value) >= parseInt(stockItemQty.value) && manageStock.innerText == 1) {
+            button.disabled = true;
+        } else {
+            qtyInput.value = parseInt(qtyInput.value) + 1;
+            button.disabled = false;
+        }
+    }
+</script>

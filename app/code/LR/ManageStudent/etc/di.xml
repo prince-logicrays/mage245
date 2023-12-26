@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="LR\ManageStudent\Api\Data\ManageStudentInterface" type="LR\ManageStudent\Model\ManageStudent"/>
+    <preference for="LR\ManageStudent\Api\ManageStudentRepositoryInterface" type="LR\ManageStudent\Model\Repository\ManageStudentRepository"/>
+    <preference for="LR\ManageStudent\Api\Data\ManageStudentSearchResultsInterface" type="LR\ManageStudent\Model\ManageStudentSearchResults"/>
+</config>

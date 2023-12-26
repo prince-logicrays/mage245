@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<page layout="1column"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- when display custom content in PDP page without custom option then apply below code -->
+        <!-- <referenceBlock name="product.info.addtocart">
+            <block class="Logicrays\DispatchDate\Block\DispatchDate" name="product.info.custom_block" template="Logicrays_DispatchDate::catalog/product/dispatchDate.phtml"/>
+        </referenceBlock> -->
+
+        <!-- when display custom content in PDP page with custom option then apply below code -->
+        <referenceContainer name="product.info.main">
+            <block class="Logicrays\DispatchDate\Block\DispatchDate" name="custom.checkbox" template="Logicrays_DispatchDate::catalog/product/dispatchDate.phtml">
+            </block>
+        </referenceContainer>
+        <move element="custom.checkbox" destination="product.info.options.wrapper.bottom" after="-"/>
+    </body>
+</page>
