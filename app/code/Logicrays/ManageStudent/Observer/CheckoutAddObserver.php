@@ -17,8 +17,7 @@ class CheckoutAddObserver implements ObserverInterface
         RequestInterface $request,
         ManageStudentCollectionFactory $managestudentCollectionFactory,
         Json $serializer = null
-        )
-    {
+    ) {
         $this->_request = $request;
         $this->managestudentCollectionFactory = $managestudentCollectionFactory;
         $this->serializer = $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()
