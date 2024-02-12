@@ -40,7 +40,7 @@ class Data extends AbstractHelper
     /**
      * Get product dispatch date
      *
-     * @return void
+     * @return int
      */
     public function getProductDispatchDate($extraWorkingDays = null)
     {
