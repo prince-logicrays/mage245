@@ -87,7 +87,7 @@ class Data extends AbstractHelper
 
         $numberofWorkingDays = $numberOfDaysToSkip;
 
-            // Create DateTime object
+        // Create DateTime object
         $dateTimeObject = $this->timezone->date(new \DateTime($startDate));
 
         $startDateTimeStamp = $this->date->gmtTimestamp($dateTimeObject);
